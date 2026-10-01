@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">AndroidDevelopment</string>
+    <string name="auth_title">Авторизация</string>
+    <string name="login_hint">Логин</string>
+    <string name="password_hint">Пароль</string>
+    <string name="btn_login">Вход</string>
+    <string name="btn_register">Регистрация</string>
+    <string name="btn_exit">Выход</string>
+    <string name="menu_title">Меню</string>
+    <string name="btn_start">Старт</string>
+    <string name="btn_profile">Профиль</string>
+    <string name="btn_settings">Настройки</string>
+    <string name="btn_report">Сообщить о проблеме</string>
+    <string name="settings_title">Настройки</string>
+    <string name="theme_switch">Темная тема</string>
+    <string name="reg_title">Регистрация</string>
+    <string name="email_hint">Email</string>
+    <string name="btn_submit_reg">Зарегистрироваться</string>
+    <string name="btn_back">Назад</string>
+    <string name="btn_change_pass">Сменить пароль</string>
 </resources>
