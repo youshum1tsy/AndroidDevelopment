@@ -18,5 +18,5 @@
     <Button android:id="@+id/btnSettings" android:text="@string/btn_settings" android:layout_width="match_parent" android:layout_height="wrap_content" />
     <Button android:id="@+id/btnProblem" android:text="@string/btn_report" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/btnExit" android:text="@string/btn_exit" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
+    <EditText android:id="@+id/etTask" android:hint="Task" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
 </LinearLayout>

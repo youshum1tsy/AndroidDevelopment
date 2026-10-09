@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 
 class MenuActivity : AppCompatActivity() {
@@ -15,8 +16,6 @@ class MenuActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnProfile).setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
-            intent.putExtra("USER_LOGIN", "Ivanov123")
-            intent.putExtra("USER_EMAIL", "ivan@example.com")
             startActivity(intent)
         }
 
@@ -31,9 +30,12 @@ class MenuActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnExit).setOnClickListener {
-            finishAffinity()
+            val intent = Intent(this, HelloActivity::class.java)
+            val editText = findViewById<EditText>(R.id.etTask)
+            intent.putExtra("TEXT_TASK", editText.text.toString())
+            setResult(Activity.RESULT_OK, intent)
+            finish()
         }
-
 
     }
 }

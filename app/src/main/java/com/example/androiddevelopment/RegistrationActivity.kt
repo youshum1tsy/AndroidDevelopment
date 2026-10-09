@@ -23,6 +23,7 @@ class RegistrationActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnSubmitReg).setOnClickListener {
             finish()
         }
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

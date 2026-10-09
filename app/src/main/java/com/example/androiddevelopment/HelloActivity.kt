@@ -6,10 +6,22 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 
 class HelloActivity : AppCompatActivity() {
     private val TAG = "HelloActivity"
+
+    private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val returnedText = result.data?.getStringExtra("TEXT_TASK")
+            val myLabel: TextView = findViewById(R.id.TV_TASK)
+            myLabel.text = returnedText
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +35,7 @@ class HelloActivity : AppCompatActivity() {
         }
         btnLogin.setOnClickListener {
             val intent = Intent(this, MenuActivity::class.java)
-            startActivity(intent)
+            startForResult.launch(intent)
         }
         if (savedInstanceState != null) {
             val savedText = savedInstanceState.getString("key_login")
