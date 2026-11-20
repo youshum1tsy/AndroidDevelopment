@@ -18,4 +18,14 @@
     <string name="btn_submit_reg">Зарегистрироваться</string>
     <string name="btn_back">Назад</string>
     <string name="btn_change_pass">Сменить пароль</string>
+
+    <!-- Новые строки для ЛР № 3 -->
+    <string name="fullname_hint">ФИО</string>
+    <string name="birthdate_hint">Дата рождения (ДД.ММ.ГГГГ)</string>
+    <string name="gender_label">Пол:</string>
+    <string name="gender_male">М</string>
+    <string name="gender_female">Ж</string>
+    <string name="btn_select_avatar">Выбрать аватар</string>
+    <string name="btn_add_user">Добавить</string>
+    <string name="btn_add_element">Добавить!</string>
 </resources>
