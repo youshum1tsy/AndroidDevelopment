@@ -2,6 +2,9 @@ package com.example.androiddevelopment
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +15,7 @@ class UserListActivity : AppCompatActivity() {
     private val TAG = "UserListActivity"
     private lateinit var db: DatabaseHandler
     private lateinit var lvUsers: ListView
+    private lateinit var btnAddUser: Button
     private val usersList = ArrayList<User>()
     private lateinit var usersAdapter: ArrayAdapter<User>
 
@@ -21,20 +25,32 @@ class UserListActivity : AppCompatActivity() {
         android.R.drawable.ic_menu_myplaces
     )
 
+    private val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (isFinishing || isDestroyed) return
+
+            btnAddUser.isEnabled = true
+            btnAddUser.setText(R.string.btn_add_user)
+
+            @Suppress("UNCHECKED_CAST")
+            val loadedUsers = msg.obj as? ArrayList<User> ?: return
+            usersList.clear()
+            usersList.addAll(loadedUsers)
+            usersAdapter.notifyDataSetChanged()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_list)
 
-        db = DatabaseHandler(this)
+        db = DatabaseHandler.getInstance(this)
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val currentUserId = prefs.getInt("current_user_id", -1)
 
         lvUsers = findViewById(R.id.lvUsers)
-        val btnAddUser = findViewById<Button>(R.id.btnAddUser)
+        btnAddUser = findViewById(R.id.btnAddUser)
         val btnUserBack = findViewById<Button>(R.id.btnUserBack)
-        btnUserBack.setOnClickListener {
-            finish()
-        }
 
         usersAdapter = object : ArrayAdapter<User>(
             this,
@@ -57,22 +73,26 @@ class UserListActivity : AppCompatActivity() {
                 val safeIndex = user.avatarIndex.coerceIn(0, avatars.lastIndex)
                 ivAvatar.setImageResource(avatars[safeIndex])
 
-                // Нажатие на саму строку -> открывает Профиль этого пользователя
                 view.setOnClickListener {
                     val intent = Intent(this@UserListActivity, ProfileActivity::class.java)
                     intent.putExtra("VIEW_USER_ID", user.id)
                     startActivity(intent)
                 }
 
-                // Нажатие на крестик -> удаляет пользователя
                 btnDelete.setOnClickListener {
                     if (user.id == currentUserId) {
                         Toast.makeText(this@UserListActivity, "Нельзя удалить самого себя", Toast.LENGTH_SHORT).show()
                         return@setOnClickListener
                     }
-                    db.deleteUser(user.id)
-                    loadUsers()
-                    Log.d(TAG, "Удалён пользователь: ${user.login}")
+                    btnDelete.isEnabled = false
+                    Thread {
+                        db.deleteUser(user.id)
+                        Log.d(TAG, "Удалён пользователь: ${user.login}")
+                        val updated = db.getAllUsers()
+                        val msg = Message.obtain()
+                        msg.obj = updated
+                        handler.sendMessage(msg)
+                    }.start()
                 }
 
                 return view
@@ -84,21 +104,30 @@ class UserListActivity : AppCompatActivity() {
         btnAddUser.setOnClickListener {
             startActivity(Intent(this, RegistrationActivity::class.java))
         }
+
+        btnUserBack.setOnClickListener {
+            finish()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        loadUsers()
+        loadUsersAsync()
     }
 
-    private fun loadUsers() {
-        usersList.clear()
-        usersList.addAll(db.getAllUsers())
-        usersAdapter.notifyDataSetChanged()
+    private fun loadUsersAsync() {
+        btnAddUser.isEnabled = false
+        btnAddUser.text = "Загрузка..."
+        Thread {
+            val loaded = db.getAllUsers()
+            val msg = Message.obtain()
+            msg.obj = loaded
+            handler.sendMessage(msg)
+        }.start()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        db.close()
+        handler.removeCallbacksAndMessages(null)
     }
 }

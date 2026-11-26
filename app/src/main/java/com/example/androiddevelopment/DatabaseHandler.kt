@@ -2,9 +2,12 @@ package com.example.androiddevelopment
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.os.Looper
 import android.provider.BaseColumns
+import android.util.Log
 
 object DBContract {
     object UserEntry : BaseColumns {
@@ -21,12 +24,23 @@ object DBContract {
     }
 }
 
-class DatabaseHandler(context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHandler private constructor(context: Context) :
+    SQLiteOpenHelper(context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    private val appContext = context.applicationContext
 
     companion object {
         private const val DATABASE_VERSION = 2
         private const val DATABASE_NAME = "Users.db"
+
+        @Volatile
+        private var instance: DatabaseHandler? = null
+
+        fun getInstance(context: Context): DatabaseHandler {
+            return instance ?: synchronized(this) {
+                instance ?: DatabaseHandler(context).also { instance = it }
+            }
+        }
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -49,6 +63,20 @@ class DatabaseHandler(context: Context) :
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS ${DBContract.UserEntry.TABLE_NAME}")
         onCreate(db)
+    }
+
+    // Имитация задержки при обращении к БД (только в фоновом потоке)
+    private fun simulateDelay() {
+        val prefs = appContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val delayEnabled = prefs.getBoolean("db_delay_enabled", true)
+        if (delayEnabled && Looper.myLooper() != Looper.getMainLooper()) {
+            Log.d("DatabaseHandler", "Имитация задержки БД: 2000 мс...")
+            try {
+                Thread.sleep(2000)
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun getUsersCount(): Int {
@@ -74,9 +102,9 @@ class DatabaseHandler(context: Context) :
     }
 
     fun addUser(user: User): Boolean {
+        simulateDelay()
         if (isLoginExists(user.login)) return false
 
-        // Первый зарегистрированный пользователь автоматически становится админом
         val isFirstUser = getUsersCount() == 0
         val adminFlag = if (isFirstUser || user.isAdmin) 1 else 0
 
@@ -96,6 +124,7 @@ class DatabaseHandler(context: Context) :
     }
 
     fun loginUser(login: String, pass: String): User? {
+        simulateDelay()
         val db = readableDatabase
         val cursor = db.rawQuery(
             "SELECT * FROM ${DBContract.UserEntry.TABLE_NAME} WHERE ${DBContract.UserEntry.COLUMN_LOGIN} = ? AND ${DBContract.UserEntry.COLUMN_PASS} = ?",
@@ -110,6 +139,7 @@ class DatabaseHandler(context: Context) :
     }
 
     fun getUserById(id: Int): User? {
+        simulateDelay()
         val db = readableDatabase
         val cursor = db.rawQuery(
             "SELECT * FROM ${DBContract.UserEntry.TABLE_NAME} WHERE ${DBContract.UserEntry.COLUMN_ID} = ?",
@@ -124,6 +154,7 @@ class DatabaseHandler(context: Context) :
     }
 
     fun getAllUsers(): ArrayList<User> {
+        simulateDelay()
         val list = ArrayList<User>()
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM ${DBContract.UserEntry.TABLE_NAME}", null)
@@ -137,6 +168,7 @@ class DatabaseHandler(context: Context) :
     }
 
     fun makeAdmin(userId: Int) {
+        simulateDelay()
         val db = writableDatabase
         val values = ContentValues().apply {
             put(DBContract.UserEntry.COLUMN_IS_ADMIN, 1)
@@ -150,6 +182,7 @@ class DatabaseHandler(context: Context) :
     }
 
     fun deleteUser(userId: Int) {
+        simulateDelay()
         val db = writableDatabase
         db.delete(
             DBContract.UserEntry.TABLE_NAME,
@@ -158,7 +191,7 @@ class DatabaseHandler(context: Context) :
         )
     }
 
-    private fun readUserFromCursor(cursor: android.database.Cursor): User {
+    private fun readUserFromCursor(cursor: Cursor): User {
         return User(
             id = cursor.getInt(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_ID)),
             login = cursor.getString(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_LOGIN)),

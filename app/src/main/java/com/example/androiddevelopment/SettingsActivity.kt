@@ -14,10 +14,11 @@ class SettingsActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val switchTheme = findViewById<Switch>(R.id.switchTheme)
+        val switchDbDelay = findViewById<Switch>(R.id.switchDbDelay)
         val btnBack = findViewById<Button>(R.id.btnSettingsBack)
 
-        // Сначала выставляем сохранённое состояние, и только потом вешаем слушатель
         switchTheme.isChecked = prefs.getBoolean("is_dark_theme", false)
+        switchDbDelay.isChecked = prefs.getBoolean("db_delay_enabled", true)
 
         switchTheme.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("is_dark_theme", isChecked).apply()
@@ -27,6 +28,10 @@ class SettingsActivity : AppCompatActivity() {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
             AppCompatDelegate.setDefaultNightMode(mode)
+        }
+
+        switchDbDelay.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("db_delay_enabled", isChecked).apply()
         }
 
         btnBack.setOnClickListener {
