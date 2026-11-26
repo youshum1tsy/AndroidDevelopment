@@ -9,5 +9,6 @@ data class User(
     val birthDate: String = "",
     val gender: String = "М",
     val avatarIndex: Int = 0,
+    val avatarPhoto: String = "",
     val isAdmin: Boolean = false
 )

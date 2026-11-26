@@ -5,9 +5,13 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Looper
 import android.provider.BaseColumns
+import android.util.Base64
 import android.util.Log
+import java.io.ByteArrayOutputStream
 
 object DBContract {
     object UserEntry : BaseColumns {
@@ -20,6 +24,7 @@ object DBContract {
         const val COLUMN_BIRTH_DATE = "birth_date"
         const val COLUMN_GENDER = "gender"
         const val COLUMN_AVATAR = "avatar_index"
+        const val COLUMN_AVATAR_PHOTO = "avatar_photo"
         const val COLUMN_IS_ADMIN = "is_admin"
     }
 }
@@ -30,7 +35,7 @@ class DatabaseHandler private constructor(context: Context) :
     private val appContext = context.applicationContext
 
     companion object {
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
         private const val DATABASE_NAME = "Users.db"
 
         @Volatile
@@ -39,6 +44,23 @@ class DatabaseHandler private constructor(context: Context) :
         fun getInstance(context: Context): DatabaseHandler {
             return instance ?: synchronized(this) {
                 instance ?: DatabaseHandler(context).also { instance = it }
+            }
+        }
+
+        fun bitmapToBase64(bitmap: Bitmap): String {
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            val bytes = stream.toByteArray()
+            return Base64.encodeToString(bytes, Base64.DEFAULT)
+        }
+
+        fun base64ToBitmap(base64Str: String): Bitmap? {
+            if (base64Str.isEmpty()) return null
+            return try {
+                val bytes = Base64.decode(base64Str, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } catch (e: Exception) {
+                null
             }
         }
     }
@@ -54,6 +76,7 @@ class DatabaseHandler private constructor(context: Context) :
                 ${DBContract.UserEntry.COLUMN_BIRTH_DATE} TEXT,
                 ${DBContract.UserEntry.COLUMN_GENDER} TEXT,
                 ${DBContract.UserEntry.COLUMN_AVATAR} INTEGER,
+                ${DBContract.UserEntry.COLUMN_AVATAR_PHOTO} TEXT,
                 ${DBContract.UserEntry.COLUMN_IS_ADMIN} INTEGER
             )
         """.trimIndent()
@@ -65,7 +88,6 @@ class DatabaseHandler private constructor(context: Context) :
         onCreate(db)
     }
 
-    // Имитация задержки при обращении к БД (только в фоновом потоке)
     private fun simulateDelay() {
         val prefs = appContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val delayEnabled = prefs.getBoolean("db_delay_enabled", true)
@@ -117,6 +139,7 @@ class DatabaseHandler private constructor(context: Context) :
             put(DBContract.UserEntry.COLUMN_BIRTH_DATE, user.birthDate)
             put(DBContract.UserEntry.COLUMN_GENDER, user.gender)
             put(DBContract.UserEntry.COLUMN_AVATAR, user.avatarIndex)
+            put(DBContract.UserEntry.COLUMN_AVATAR_PHOTO, user.avatarPhoto)
             put(DBContract.UserEntry.COLUMN_IS_ADMIN, adminFlag)
         }
         val result = db.insert(DBContract.UserEntry.TABLE_NAME, null, values)
@@ -181,6 +204,20 @@ class DatabaseHandler private constructor(context: Context) :
         )
     }
 
+    fun updateUserAvatar(userId: Int, avatarPhoto: String) {
+        simulateDelay()
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(DBContract.UserEntry.COLUMN_AVATAR_PHOTO, avatarPhoto)
+        }
+        db.update(
+            DBContract.UserEntry.TABLE_NAME,
+            values,
+            "${DBContract.UserEntry.COLUMN_ID} = ?",
+            arrayOf(userId.toString())
+        )
+    }
+
     fun deleteUser(userId: Int) {
         simulateDelay()
         val db = writableDatabase
@@ -201,6 +238,7 @@ class DatabaseHandler private constructor(context: Context) :
             birthDate = cursor.getString(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_BIRTH_DATE)) ?: "",
             gender = cursor.getString(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_GENDER)) ?: "М",
             avatarIndex = cursor.getInt(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_AVATAR)),
+            avatarPhoto = cursor.getString(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_AVATAR_PHOTO)) ?: "",
             isAdmin = cursor.getInt(cursor.getColumnIndexOrThrow(DBContract.UserEntry.COLUMN_IS_ADMIN)) == 1
         )
     }
