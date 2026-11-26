@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Камень - Ножницы - Бумага"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="Счёт: Вы 0 : 0 Телефон"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/tvChoices"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:gravity="center"
+        android:text="Выберите вариант ниже"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tvGameResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"
+        android:text="Сделайте ход!"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnRock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Камень"
+        android:textAllCaps="false"
+        app:cornerRadius="24dp" />
+
+    <Button
+        android:id="@+id/btnScissors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Ножницы"
+        android:textAllCaps="false"
+        app:cornerRadius="24dp" />
+
+    <Button
+        android:id="@+id/btnPaper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Бумага"
+        android:textAllCaps="false"
+        app:cornerRadius="24dp" />
+
+    <Button
+        android:id="@+id/btnGameBack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/btn_back"
+        android:textAllCaps="false"
+        app:cornerRadius="24dp" />
+
+</LinearLayout>

@@ -1,25 +1,53 @@
 package com.example.androiddevelopment
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 
 class RegistrationActivity : AppCompatActivity() {
     private val TAG = "RegistrationActivity"
     private lateinit var db: DatabaseHandler
     private lateinit var btnSubmitReg: Button
+    private lateinit var ivAvatar: ImageView
 
     private var avatarIndex = 0
+    private var capturedPhotoBase64 = ""
+
     private val avatars = arrayOf(
         android.R.drawable.ic_menu_camera,
         android.R.drawable.ic_menu_gallery,
         android.R.drawable.ic_menu_myplaces
     )
+
+    private val takePhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            ivAvatar.setImageBitmap(bitmap)
+            capturedPhotoBase64 = DatabaseHandler.bitmapToBase64(bitmap)
+            Log.d(TAG, "Фото с камеры установлено как аватар")
+        }
+    }
+
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCamera()
+        } else {
+            Toast.makeText(this, "Разрешение на камеру не выдано", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private val handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -38,7 +66,6 @@ class RegistrationActivity : AppCompatActivity() {
                     "Пользователь зарегистрирован!"
                 }
                 Toast.makeText(this@RegistrationActivity, text, Toast.LENGTH_SHORT).show()
-                Log.d(TAG, "Регистрация успешна, isAdmin=$isAdmin")
 
                 if (isTaskRoot) {
                     startActivity(Intent(this@RegistrationActivity, HelloActivity::class.java))
@@ -56,8 +83,9 @@ class RegistrationActivity : AppCompatActivity() {
 
         db = DatabaseHandler.getInstance(this)
 
-        val ivAvatar = findViewById<ImageView>(R.id.ivRegAvatar)
+        ivAvatar = findViewById(R.id.ivRegAvatar)
         val btnSelectAvatar = findViewById<Button>(R.id.btnSelectAvatar)
+        val btnTakePhoto = findViewById<Button>(R.id.btnTakePhoto)
         val etLogin = findViewById<EditText>(R.id.etRegLogin)
         val etPassword = findViewById<EditText>(R.id.etRegPassword)
         val etEmail = findViewById<EditText>(R.id.etRegEmail)
@@ -67,13 +95,23 @@ class RegistrationActivity : AppCompatActivity() {
         btnSubmitReg = findViewById(R.id.btnSubmitReg)
 
         btnSelectAvatar.setOnClickListener {
+            capturedPhotoBase64 = ""
             avatarIndex = (avatarIndex + 1) % avatars.size
             ivAvatar.setImageResource(avatars[avatarIndex])
         }
 
         ivAvatar.setOnClickListener {
+            capturedPhotoBase64 = ""
             avatarIndex = (avatarIndex + 1) % avatars.size
             ivAvatar.setImageResource(avatars[avatarIndex])
+        }
+
+        btnTakePhoto.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                openCamera()
+            } else {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
 
         btnSubmitReg.setOnClickListener {
@@ -96,6 +134,7 @@ class RegistrationActivity : AppCompatActivity() {
             }
 
             val currentAvatar = avatarIndex
+            val currentPhoto = capturedPhotoBase64
             btnSubmitReg.isEnabled = false
             btnSubmitReg.text = "Сохранение..."
 
@@ -109,6 +148,7 @@ class RegistrationActivity : AppCompatActivity() {
                     birthDate = birthDate,
                     gender = gender,
                     avatarIndex = currentAvatar,
+                    avatarPhoto = currentPhoto,
                     isAdmin = willBeAdmin
                 )
                 val added = db.addUser(newUser)
@@ -118,6 +158,14 @@ class RegistrationActivity : AppCompatActivity() {
                 msg.obj = willBeAdmin
                 handler.sendMessage(msg)
             }.start()
+        }
+    }
+
+    private fun openCamera() {
+        try {
+            takePhotoLauncher.launch(null)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Камера недоступна", Toast.LENGTH_SHORT).show()
         }
     }
 

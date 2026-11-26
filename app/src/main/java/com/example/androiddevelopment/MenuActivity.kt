@@ -73,6 +73,10 @@ class MenuActivity : AppCompatActivity() {
             prefs.edit().remove("current_user_id").apply()
             finish()
         }
+
+        btnStart.setOnClickListener {
+            startActivity(Intent(this, GameActivity::class.java))
+        }
     }
 
     override fun onDestroy() {

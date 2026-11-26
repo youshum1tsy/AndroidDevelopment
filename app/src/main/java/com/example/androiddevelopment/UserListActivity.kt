@@ -73,6 +73,14 @@ class UserListActivity : AppCompatActivity() {
                 val safeIndex = user.avatarIndex.coerceIn(0, avatars.lastIndex)
                 ivAvatar.setImageResource(avatars[safeIndex])
 
+                val bitmap = DatabaseHandler.base64ToBitmap(user.avatarPhoto)
+                if (bitmap != null) {
+                    ivAvatar.setImageBitmap(bitmap)
+                } else {
+                    val safeIndex = user.avatarIndex.coerceIn(0, avatars.lastIndex)
+                    ivAvatar.setImageResource(avatars[safeIndex])
+                }
+
                 view.setOnClickListener {
                     val intent = Intent(this@UserListActivity, ProfileActivity::class.java)
                     intent.putExtra("VIEW_USER_ID", user.id)
