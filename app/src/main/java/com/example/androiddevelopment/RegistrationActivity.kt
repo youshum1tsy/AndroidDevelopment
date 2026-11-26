@@ -2,6 +2,9 @@ package com.example.androiddevelopment
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 class RegistrationActivity : AppCompatActivity() {
     private val TAG = "RegistrationActivity"
     private lateinit var db: DatabaseHandler
+    private lateinit var btnSubmitReg: Button
 
     private var avatarIndex = 0
     private val avatars = arrayOf(
@@ -17,11 +21,40 @@ class RegistrationActivity : AppCompatActivity() {
         android.R.drawable.ic_menu_myplaces
     )
 
+    private val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (isFinishing || isDestroyed) return
+
+            btnSubmitReg.isEnabled = true
+            btnSubmitReg.setText(R.string.btn_submit_reg)
+
+            val success = msg.what == 1
+            val isAdmin = msg.obj as? Boolean ?: false
+
+            if (success) {
+                val text = if (isAdmin) {
+                    "Вы зарегистрированы как Администратор!"
+                } else {
+                    "Пользователь зарегистрирован!"
+                }
+                Toast.makeText(this@RegistrationActivity, text, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Регистрация успешна, isAdmin=$isAdmin")
+
+                if (isTaskRoot) {
+                    startActivity(Intent(this@RegistrationActivity, HelloActivity::class.java))
+                }
+                finish()
+            } else {
+                Toast.makeText(this@RegistrationActivity, "Такой логин уже существует", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
 
-        db = DatabaseHandler(this)
+        db = DatabaseHandler.getInstance(this)
 
         val ivAvatar = findViewById<ImageView>(R.id.ivRegAvatar)
         val btnSelectAvatar = findViewById<Button>(R.id.btnSelectAvatar)
@@ -31,7 +64,7 @@ class RegistrationActivity : AppCompatActivity() {
         val etFullName = findViewById<EditText>(R.id.etRegFullName)
         val etBirthDate = findViewById<EditText>(R.id.etRegBirthDate)
         val rgGender = findViewById<RadioGroup>(R.id.rgGender)
-        val btnSubmitReg = findViewById<Button>(R.id.btnSubmitReg)
+        btnSubmitReg = findViewById(R.id.btnSubmitReg)
 
         btnSelectAvatar.setOnClickListener {
             avatarIndex = (avatarIndex + 1) % avatars.size
@@ -62,39 +95,34 @@ class RegistrationActivity : AppCompatActivity() {
                 "М"
             }
 
-            val willBeAdmin = db.getUsersCount() == 0
-            val newUser = User(
-                login = login,
-                pass = password,
-                email = email,
-                fullName = fullName,
-                birthDate = birthDate,
-                gender = gender,
-                avatarIndex = avatarIndex,
-                isAdmin = willBeAdmin
-            )
+            val currentAvatar = avatarIndex
+            btnSubmitReg.isEnabled = false
+            btnSubmitReg.text = "Сохранение..."
 
-            if (db.addUser(newUser)) {
-                val msg = if (willBeAdmin) {
-                    "Вы зарегистрированы как Администратор!"
-                } else {
-                    "Пользователь зарегистрирован!"
-                }
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-                Log.d(TAG, "Зарегистрирован: $login, isAdmin=$willBeAdmin")
+            Thread {
+                val willBeAdmin = db.getUsersCount() == 0
+                val newUser = User(
+                    login = login,
+                    pass = password,
+                    email = email,
+                    fullName = fullName,
+                    birthDate = birthDate,
+                    gender = gender,
+                    avatarIndex = currentAvatar,
+                    isAdmin = willBeAdmin
+                )
+                val added = db.addUser(newUser)
 
-                if (isTaskRoot) {
-                    startActivity(Intent(this, HelloActivity::class.java))
-                }
-                finish()
-            } else {
-                Toast.makeText(this, "Такой логин уже существует", Toast.LENGTH_SHORT).show()
-            }
+                val msg = Message.obtain()
+                msg.what = if (added) 1 else 0
+                msg.obj = willBeAdmin
+                handler.sendMessage(msg)
+            }.start()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        db.close()
+        handler.removeCallbacksAndMessages(null)
     }
 }
