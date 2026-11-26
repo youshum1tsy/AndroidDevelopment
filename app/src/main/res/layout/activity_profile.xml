@@ -1,52 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="30dp"
-    android:gravity="center_horizontal">
+    android:fitsSystemWindows="true">
 
-    <ImageView
-        android:id="@+id/imgAvatar"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginBottom="20dp"
-
-        android:background="@android:color/darker_gray"
-        android:src="@android:drawable/ic_menu_camera"
-        android:padding="20dp"
-        android:scaleType="fitCenter" />
-
-    <TextView android:id="@+id/tvProfileName"
-        android:text="Имя Пользователя"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/white" />
-
-    <TextView android:id="@+id/tvProfileEmail"
-        android:text="email@example.com"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:layout_marginBottom="40dp"
-        android:textColor="@android:color/darker_gray" />
-
-    <Button
-        android:id="@+id/btnChangePassword"
-        android:text="@string/btn_change_pass"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/holo_blue_light"
-        android:background="?android:attr/selectableItemBackground" />
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <Button
-        android:id="@+id/btnBack"
-        android:text="@string/btn_back"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"/>
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
+            android:background="#FFCCCCCC"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/ic_menu_camera" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvProfileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Имя Пользователя"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvProfileEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="email@example.com"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvProfileDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:gravity="center"
+            android:textSize="15sp" />
+
+        <!-- Пункт доступен только администратору -->
+        <Button
+            android:id="@+id/btnMakeAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_make_admin"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            app:cornerRadius="24dp" />
+
+        <Button
+            android:id="@+id/btnChangePassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:text="@string/btn_change_pass"
+            android:textAllCaps="false"
+            android:textColor="@color/jungle_teal" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/btn_back"
+            android:textAllCaps="false"
+            app:cornerRadius="24dp" />
+
+    </LinearLayout>
+</ScrollView>

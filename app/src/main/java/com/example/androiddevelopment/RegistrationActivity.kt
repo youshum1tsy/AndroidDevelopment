@@ -1,16 +1,14 @@
 package com.example.androiddevelopment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.RadioButton
-import android.widget.RadioGroup
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
 class RegistrationActivity : AppCompatActivity() {
     private val TAG = "RegistrationActivity"
+    private lateinit var db: DatabaseHandler
 
     private var avatarIndex = 0
     private val avatars = arrayOf(
@@ -22,7 +20,8 @@ class RegistrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registration)
-        Log.d(TAG, "onCreate: Активность регистрации создана")
+
+        db = DatabaseHandler(this)
 
         val ivAvatar = findViewById<ImageView>(R.id.ivRegAvatar)
         val btnSelectAvatar = findViewById<Button>(R.id.btnSelectAvatar)
@@ -34,48 +33,68 @@ class RegistrationActivity : AppCompatActivity() {
         val rgGender = findViewById<RadioGroup>(R.id.rgGender)
         val btnSubmitReg = findViewById<Button>(R.id.btnSubmitReg)
 
-        if (savedInstanceState != null) {
-            etLogin.setText(savedInstanceState.getString("login"))
-            etEmail.setText(savedInstanceState.getString("email"))
-            etPassword.setText(savedInstanceState.getString("pass"))
-            etFullName.setText(savedInstanceState.getString("fullname"))
-            etBirthDate.setText(savedInstanceState.getString("birthdate"))
-        }
-
         btnSelectAvatar.setOnClickListener {
             avatarIndex = (avatarIndex + 1) % avatars.size
             ivAvatar.setImageResource(avatars[avatarIndex])
-            Log.d(TAG, "Нажата кнопка выбора аватара (индекс: $avatarIndex)")
+        }
+
+        ivAvatar.setOnClickListener {
+            avatarIndex = (avatarIndex + 1) % avatars.size
+            ivAvatar.setImageResource(avatars[avatarIndex])
         }
 
         btnSubmitReg.setOnClickListener {
+            val login = etLogin.text.toString().trim()
+            val password = etPassword.text.toString()
+            val email = etEmail.text.toString().trim()
+            val fullName = etFullName.text.toString().trim()
+            val birthDate = etBirthDate.text.toString().trim()
+
+            if (login.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Логин и пароль обязательны", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val selectedId = rgGender.checkedRadioButtonId
             val gender = if (selectedId != -1) {
                 findViewById<RadioButton>(selectedId).text.toString()
             } else {
-                "Не выбран"
+                "М"
             }
 
-            Log.d(
-                TAG,
-                "Нажата кнопка регистрации -> " +
-                        "Логин: ${etLogin.text}, " +
-                        "Пароль: ${etPassword.text}, " +
-                        "Email: ${etEmail.text}, " +
-                        "ФИО: ${etFullName.text}, " +
-                        "Дата рождения: ${etBirthDate.text}, " +
-                        "Пол: $gender"
+            val willBeAdmin = db.getUsersCount() == 0
+            val newUser = User(
+                login = login,
+                pass = password,
+                email = email,
+                fullName = fullName,
+                birthDate = birthDate,
+                gender = gender,
+                avatarIndex = avatarIndex,
+                isAdmin = willBeAdmin
             )
+
+            if (db.addUser(newUser)) {
+                val msg = if (willBeAdmin) {
+                    "Вы зарегистрированы как Администратор!"
+                } else {
+                    "Пользователь зарегистрирован!"
+                }
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Зарегистрирован: $login, isAdmin=$willBeAdmin")
+
+                if (isTaskRoot) {
+                    startActivity(Intent(this, HelloActivity::class.java))
+                }
+                finish()
+            } else {
+                Toast.makeText(this, "Такой логин уже существует", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString("login", findViewById<EditText>(R.id.etRegLogin).text.toString())
-        outState.putString("email", findViewById<EditText>(R.id.etRegEmail).text.toString())
-        outState.putString("pass", findViewById<EditText>(R.id.etRegPassword).text.toString())
-        outState.putString("fullname", findViewById<EditText>(R.id.etRegFullName).text.toString())
-        outState.putString("birthdate", findViewById<EditText>(R.id.etRegBirthDate).text.toString())
-        Log.d(TAG, "onSaveInstanceState: Данные регистрации сохранены")
+    override fun onDestroy() {
+        super.onDestroy()
+        db.close()
     }
 }

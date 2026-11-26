@@ -28,4 +28,7 @@
     <string name="btn_select_avatar">Выбрать аватар</string>
     <string name="btn_add_user">Добавить</string>
     <string name="btn_add_element">Добавить!</string>
+
+    <string name="btn_admin">Администрирование</string>
+    <string name="btn_make_admin">Сделать администратором</string>
 </resources>
